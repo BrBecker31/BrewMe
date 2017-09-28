@@ -16,20 +16,24 @@ var database = firebase.database()
 
 
 database.ref().on("value", function(snapshot){
-	 $("#buttons-div").empty();
+     $("#buttons-div").empty();
 
     var breweries = []
     var data = snapshot.val()
+
     for(i in data){
         breweries.push(data[i])
     }
 
     var sorted = breweries.sort(function(a, b){
-        return a.votes - b.votes
-
+        var avotes = parseInt(a.votes) || 0
+        var bvotes = parseInt(b.votes) || 0
+        return bvotes - avotes
     })
-console.log(sorted);
+
     for(i in sorted){
+        console.log(sorted[i].id)
+        console.log(sorted[i])
         build_brewery_button(sorted[i])
     }
 })
@@ -59,35 +63,33 @@ function findBreweriesInCity(city){
         data: $.param(par)
     }).done(function(response) {
         for(i in response.data){
+            // For every object in the brewery array
             var brewery = response.data[i]
-            console.log(brewery)
-            console.log(brewery.id)
+            // Create a database reference to db/brewery.id
             var db_obj = database.ref().child(brewery.id)
+            // Update database reference with brewery object
             db_obj.update(brewery)
         }
     });
 }
 
-function upvote_brewery(breweryId){
+function upvote_brewery(id){
     // Prevent a user from voting multiple times
-    var voted = sessionStorage.getItem('voted');
-    if(!voted){
-        sessionStorage.setItem('voted', true)
-        var databaseRef = database.ref(breweryId).child('votes')
-        databaseRef.transaction(function(votes) {
-            if (votes) {
-                votes = votes + 1;
-            } else {
-                votes = 1
-            }
-            return votes;
-        });
-    } else {
-        console.log('already voted')
-    }
+    var databaseRef = database.ref(id).child('votes')
+    databaseRef.transaction(function(current_votes) {
+        var votes = parseInt(current_votes) || 0
+        if (votes) {
+            votes = votes + 1;
+        } else {
+            votes = 1
+        }
+        return votes;
+    });
 }
 
+
 function build_brewery_button(breweryResults){
+    console.log('building: ', breweryResults)
     console.log(breweryResults.brewery.name)
     //store object data (name,logo,location,price, website, phone, beeers, tweets?)
     // anchor for dropdown portion
@@ -111,18 +113,27 @@ function build_brewery_button(breweryResults){
     //container div for holding city and price
     var containerDiv = $("<div>").addClass("col-md-3");
     var cityDiv = $("<div>").addClass("col-md-3 align-self-center ").append($("<h6>" + breweryResults.locality + "</h6>"));
+
     var dateDiv = $("<div>").addClass("col-md-3 align-self-center ").append($("<h6>" + breweryResults.brewery.established + "</h6>"));
     var buttonButton = $("<button>").attr({id:"upVote",
-    		 type:"button",
-    		 "data-type": breweryResults.id,
-    		  class:"btn btn-outline-secondary"
+             type:"button",
+             "data-type": breweryResults.id,
+              class:"btn btn-outline-secondary"
     }).append($("<i>").attr({class:"fa fa-thumbs-o-up fa-2x", 
-    	"aria-hidden":"true"
+        "aria-hidden":"true"
     }));
+
+    buttonButton.on('click', function(event){
+        event.stopPropagation()
+        console.log('upvote clicked... ' + $(this).attr('data-type'))
+        upvote_brewery($(this).attr('data-type'))
+        $(this).remove()
+    })
+
     var buttonDiv= $("<div>").addClass("col-md-2 align-self-center").append(buttonButton);
 
     //Appends the city and price to the container div
-  	containerDiv.append(cityDiv);
+    containerDiv.append(cityDiv);
     containerDiv.append(dateDiv);
 
     //appending everything in the brewery button together
@@ -172,4 +183,3 @@ function build_brewery_button(breweryResults){
     
 
 }
-

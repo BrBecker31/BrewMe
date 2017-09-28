@@ -1,10 +1,17 @@
-
-
-
 html, body {
 	
 	font-family: 'Special Elite', cursive;
 
+}
+
+
+.widthContainer {
+	width: 80%;
+	background-color: white;
+	font-size: 19px;
+	opacity: .9;
+	border: 2px solid black;
+	border-radius: 15px;
 }
 
 
@@ -66,11 +73,18 @@ a:hover
 	background-color: darkgrey;
 }
 
+#upVote:hover {
+	cursor: pointer;
+}
+
+#upVote.disabled:hover {
+	cursor: not-allowed;
+}
+
 .widthContainer {
 	width: 80%;
 	background-color: white;
-	opacity: .9;
+	opacity: .8;
 	border: 2px solid black;
 	border-radius: 15px;
-	font-size: 19px;
-
+}
